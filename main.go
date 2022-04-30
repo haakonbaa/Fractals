@@ -20,6 +20,16 @@ func mandelbrotIters(c complex128, maxIters uint) uint {
 	return i
 }
 
+// Gets number of iterations to confirm value is out of Filled Julia set
+// stops iterating at maxIters
+func juliaIters(z, c complex128, maxIters uint) uint {
+	var i uint = 0
+	for ; cmplx.Abs(z) < 2 && i < maxIters; i++ {
+		z = z*z + c
+	}
+	return i
+}
+
 // Gets the color to color a pixel based on the iterations
 func mandelbrotColor(iters, maxIters uint) color.RGBA {
 	if iters == maxIters {
@@ -55,6 +65,20 @@ func Max(x, y uint) uint {
 	return y
 }
 
+// Find square defined by upper left and lower right complex numbers
+// with the least area that still fits circle with center, c, and
+// radius, r, and has the same center of mass as the circle.
+func rectWithCircleInscribed(width, height int, c complex128, r float64) (complex128, complex128) {
+	scaleW, scaleH := 1.0, 1.0
+	if width < height {
+		scaleH = float64(height) / float64(width)
+	} else {
+		scaleW = float64(width) / float64(height)
+	}
+	offset := complex(scaleW*r, scaleH*r)
+	return c + offset, c - offset
+}
+
 func main() {
 	// Define image traits
 	width := 2000
@@ -62,12 +86,16 @@ func main() {
 	lowRight := image.Point{width, height}
 	img := image.NewRGBA(image.Rectangle{image.Point{0, 0}, lowRight})
 	// Set max iterations before we should conclude a point is in the set
+	var center complex128 = 0
+	var radius float64 = 1.3
 	var maxIters uint = 200
+	br, tl := rectWithCircleInscribed(width, height, center, radius)
 	// Loop though each pixel and decide it's value
 	for x := 0; x < width; x++ {
 		for y := 0; y < height; y++ {
-			var c complex128 = mapCmplx(x, y, lowRight, complex(-2, 1.3), complex(0.6, -1.3))
-			iters := mandelbrotIters(c, maxIters)
+			var v complex128 = mapCmplx(x, y, lowRight, tl, br)
+			// iters := mandelbrotIters(v, maxIters)
+			iters := juliaIters(v, -0.8696+0.26i, maxIters)
 			img.Set(x, y, mandelbrotColor(iters, maxIters))
 		}
 	}
