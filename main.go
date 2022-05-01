@@ -49,8 +49,8 @@ func mandelbrotColor(iters, maxIters uint) color.RGBA {
 		0xff}
 }
 
-// maps a point {(x,y) in N^2 | 0 <= x < dims.X, 0 <= y < dims.Y } to
-// {z in C | tl <= z <= br} linearly
+// Maps a point {(x,y) in N^2 | 0 <= x < dims.X, 0 <= y < dims.Y } to
+// [real(tl),real(br)]xi*[imag(tl),imag(br)] linearly
 func mapCmplx(x int, y int, dims image.Point, tl complex128, br complex128) complex128 {
 	return complex(
 		float64(x)/float64(dims.X-1)*real(br-tl)+real(tl),
@@ -67,7 +67,7 @@ func Max(x, y uint) uint {
 
 // Find square defined by upper left and lower right complex numbers
 // with the least area that still fits circle with center, c, and
-// radius, r, and has the same center of mass as the circle.
+// radius, r, and has the same center as the circle.
 func rectWithCircleInscribed(width, height int, c complex128, r float64) (complex128, complex128) {
 	scaleW, scaleH := 1.0, 1.0
 	if width < height {
@@ -81,13 +81,13 @@ func rectWithCircleInscribed(width, height int, c complex128, r float64) (comple
 
 func main() {
 	// Define image traits
-	width := 2000
-	height := 2000
+	width := 1920
+	height := 1080
 	lowRight := image.Point{width, height}
 	img := image.NewRGBA(image.Rectangle{image.Point{0, 0}, lowRight})
 	// Set max iterations before we should conclude a point is in the set
 	var center complex128 = 0
-	var radius float64 = 1.3
+	var radius float64 = 1
 	var maxIters uint = 200
 	br, tl := rectWithCircleInscribed(width, height, center, radius)
 	// Loop though each pixel and decide it's value
