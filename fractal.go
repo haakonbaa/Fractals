@@ -1,12 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	"image/png"
 	"math"
 	"math/cmplx"
 	"os"
+	"strings"
 )
 
 // Gets number of iterations to confirm value is out of Mandelbrot set
@@ -80,6 +82,29 @@ func rectWithCircleInscribed(width, height int, c complex128, r float64) (comple
 }
 
 func main() {
+	args := os.Args[1:]
+	helpString := `usage: fractal type [options]
+
+Generate images of mandelbrot and filled julia set fractals.
+
+type: m (mandelbrot) or j (julia set)
+options:
+	-width=<width>			set width of image to <width>, defult is ####
+	-height=<height>		set height of image to <height>, default is ###
+	-real=<real>			set real part of center to <real>
+	-imag=<imag>			set imaginary part of center to <imag>`
+
+	// parse command line arguments
+	if len(args) == 0 {
+		fmt.Println(helpString)
+		os.Exit(1)
+	}
+
+	fractalType := args[0]
+	if strings.ToLower(fractalType) == "m" {
+
+	}
+
 	// Define image traits
 	width := 1920
 	height := 1080
