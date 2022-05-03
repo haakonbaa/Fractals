@@ -8,6 +8,8 @@ import (
 	"math"
 	"math/cmplx"
 	"os"
+	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -81,6 +83,44 @@ func rectWithCircleInscribed(width, height int, c complex128, r float64) (comple
 	return c + offset, c - offset
 }
 
+// Gets the options passed by user and parses them. Exits with status code 1
+// on wrongly formated input
+func parseOptions(options []string) (width, height int, center complex128, radius float64) {
+	// set default values
+	df := map[string]float64{
+		"width":  1920,
+		"height": 1080,
+		"radius": 1,
+		"real":   0,
+		"imag":   0,
+	}
+	re := regexp.MustCompile(`-([a-z]*)=([1-9]+[0-9]*(\.[0-9]+)?)`)
+	for _, option := range options {
+		var matches = re.FindStringSubmatch(option)
+		if len(matches) >= 3 {
+			arg := matches[1]
+			sval := matches[2]
+			if _, ok := df[arg]; ok {
+				if fval, err := strconv.ParseFloat(sval, 64); err == nil {
+					// Got valid formated string, set default value
+					df[arg] = fval
+				} else {
+					fmt.Println("Could not parse option!")
+					os.Exit(1)
+				}
+			} else {
+				fmt.Printf("Invalid option: %s\n", arg)
+				os.Exit(1)
+			}
+		} else {
+			fmt.Printf("Invalid argument '%s'\n", option)
+			os.Exit(1)
+		}
+
+	}
+	return int(df["width"]), int(df["height"]), complex(df["real"], df["imag"]), df["radius"]
+}
+
 func main() {
 	args := os.Args[1:]
 	helpString := `usage: fractal type [options]
@@ -89,30 +129,28 @@ Generate images of mandelbrot and filled julia set fractals.
 
 type: m (mandelbrot) or j (julia set)
 options:
-	-width=<width>			set width of image to <width>, defult is ####
-	-height=<height>		set height of image to <height>, default is ###
-	-real=<real>			set real part of center to <real>
-	-imag=<imag>			set imaginary part of center to <imag>`
+  -width=<width>  		set width of image to <width>, defult is ####
+  -height=<height>		set height of image to <height>, default is ###
+  -real=<real>			set real part of center to <real>
+  -imag=<imag>			set imaginary part of center to <imag>
+  -radius=<radius>		set radius to include in image to <radius>`
 
 	// parse command line arguments
 	if len(args) == 0 {
 		fmt.Println(helpString)
 		os.Exit(1)
 	}
-
-	fractalType := args[0]
-	if strings.ToLower(fractalType) == "m" {
-
+	fractalType := strings.ToLower(args[0])
+	if fractalType != "m" && fractalType != "j" {
+		fmt.Println(helpString)
+		os.Exit(1)
 	}
+	width, height, center, radius := parseOptions(args[1:])
 
 	// Define image traits
-	width := 1920
-	height := 1080
 	lowRight := image.Point{width, height}
 	img := image.NewRGBA(image.Rectangle{image.Point{0, 0}, lowRight})
 	// Set max iterations before we should conclude a point is in the set
-	var center complex128 = 0
-	var radius float64 = 1
 	var maxIters uint = 200
 	br, tl := rectWithCircleInscribed(width, height, center, radius)
 	// Loop though each pixel and decide it's value
