@@ -163,6 +163,11 @@ options:
 		}
 	}
 	// Save result to file
-	f, _ := os.Create("image.png")
-	png.Encode(f, img)
+	f, err := os.Create("images/image.png")
+	if err == nil {
+		png.Encode(f, img)
+		os.Exit(0)
+	}
+	fmt.Println(err)
+	os.Exit(1)
 }
