@@ -85,7 +85,7 @@ func rectWithCircleInscribed(width, height int, c complex128, r float64) (comple
 
 // Gets the options passed by user and parses them. Exits with status code 1
 // on wrongly formated input
-func parseOptions(options []string) (width, height int, center complex128, radius float64) {
+func parseOptions(options []string) (width, height int, center, z complex128, radius float64) {
 	// set default values
 	df := map[string]float64{
 		"width":  1920,
@@ -93,6 +93,8 @@ func parseOptions(options []string) (width, height int, center complex128, radiu
 		"radius": 1,
 		"real":   0,
 		"imag":   0,
+		"zreal":  0,
+		"zimag":  0,
 	}
 	re := regexp.MustCompile(`-([a-z]*)=([1-9]+[0-9]*(\.[0-9]+)?)`)
 	for _, option := range options {
@@ -118,22 +120,26 @@ func parseOptions(options []string) (width, height int, center complex128, radiu
 		}
 
 	}
-	return int(df["width"]), int(df["height"]), complex(df["real"], df["imag"]), df["radius"]
+	return int(df["width"]), int(df["height"]), complex(df["real"], df["imag"]), complex(df["zreal"], df["zimag"]), df["radius"]
 }
 
 func main() {
 	args := os.Args[1:]
 	helpString := `usage: fractal type [options]
 
-Generate images of mandelbrot and filled julia set fractals.
+Generate images of mandelbrot and filled julia set fractals:
+Mandelbrot: 	z(n+1) = z(n)^2 + c, z(0)=0, iterate over c in C
+Julia set : 	z(n+1) = z(n)^2 + c, c = constant, iterate over z(0) in C 
 
 type: m (mandelbrot) or j (julia set)
 options:
-  -width=<width>  		set width of image to <width>, defult is ####
-  -height=<height>		set height of image to <height>, default is ###
+  -width=<width>  		set width of image to <width>, defult is 1920
+  -height=<height>		set height of image to <height>, default is 1080
   -real=<real>			set real part of center to <real>
   -imag=<imag>			set imaginary part of center to <imag>
-  -radius=<radius>		set radius to include in image to <radius>`
+  -radius=<radius>		set radius to include in image to <radius>
+  -creal=<creal>		set real part of c in julia set to <creal>
+  -cimag=<cimag>		set imaginary part of c in julia set to <cimag>`
 
 	// parse command line arguments
 	if len(args) == 0 {
@@ -145,7 +151,7 @@ options:
 		fmt.Println(helpString)
 		os.Exit(1)
 	}
-	width, height, center, radius := parseOptions(args[1:])
+	width, height, center, z, radius := parseOptions(args[1:])
 
 	// Define image traits
 	lowRight := image.Point{width, height}
@@ -158,7 +164,7 @@ options:
 		for y := 0; y < height; y++ {
 			var v complex128 = mapCmplx(x, y, lowRight, tl, br)
 			// iters := mandelbrotIters(v, maxIters)
-			iters := juliaIters(v, -0.8696+0.26i, maxIters)
+			iters := juliaIters(v, z, maxIters)
 			img.Set(x, y, mandelbrotColor(iters, maxIters))
 		}
 	}
