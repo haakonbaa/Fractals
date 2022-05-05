@@ -35,7 +35,7 @@ func juliaIters(z, c complex128, maxIters uint) uint {
 }
 
 // Gets the color to color a pixel based on the iterations
-func mandelbrotColor(iters, maxIters uint) color.RGBA {
+func fractalColor(iters, maxIters uint) color.RGBA {
 	if iters == maxIters {
 		return color.RGBA{0, 0, 0, 0xff}
 	}
@@ -55,10 +55,10 @@ func mandelbrotColor(iters, maxIters uint) color.RGBA {
 
 // Maps a point {(x,y) in N^2 | 0 <= x < dims.X, 0 <= y < dims.Y } to
 // [real(tl),real(br)]xi*[imag(tl),imag(br)] linearly
-func mapCmplx(x int, y int, dims image.Point, tl complex128, br complex128) complex128 {
+func mapCmplx(x int, y int, width, height int, tl complex128, br complex128) complex128 {
 	return complex(
-		float64(x)/float64(dims.X-1)*real(br-tl)+real(tl),
-		float64(y)/float64(dims.Y-1)*imag(br-tl)+imag(tl))
+		float64(x)/float64(width-1)*real(br-tl)+real(tl),
+		float64(y)/float64(height-1)*imag(br-tl)+imag(tl))
 }
 
 // Max returns the max of two unsigned ints
@@ -123,6 +123,28 @@ func parseOptions(options []string) (width, height int, center, z complex128, ra
 	return int(df["width"]), int(df["height"]), complex(df["real"], df["imag"]), complex(df["zreal"], df["zimag"]), df["radius"]
 }
 
+// Create an image of the mandelbrot set with the specified parameters
+func mandelbrotImage(width, height int, tl, br complex128, maxIters uint, img *image.RGBA) {
+	for x := 0; x < width; x++ {
+		for y := 0; y < height; y++ {
+			var v complex128 = mapCmplx(x, y, width, height, tl, br)
+			iters := mandelbrotIters(v, maxIters)
+			img.Set(x, y, fractalColor(iters, maxIters))
+		}
+	}
+}
+
+// Create an image of the julia set with the specified parameters
+func juliaImage(width, height int, tl, br complex128, maxIters uint, z complex128, img *image.RGBA) {
+	for x := 0; x < width; x++ {
+		for y := 0; y < height; y++ {
+			var v complex128 = mapCmplx(x, y, width, height, tl, br)
+			iters := juliaIters(v, z, maxIters)
+			img.Set(x, y, fractalColor(iters, maxIters))
+		}
+	}
+}
+
 func main() {
 	args := os.Args[1:]
 	helpString := `usage: fractal type [options]
@@ -159,16 +181,11 @@ options:
 	// Set max iterations before we should conclude a point is in the set
 	var maxIters uint = 200
 	br, tl := rectWithCircleInscribed(width, height, center, radius)
-	// Loop though each pixel and decide it's value
-	for x := 0; x < width; x++ {
-		for y := 0; y < height; y++ {
-			var v complex128 = mapCmplx(x, y, lowRight, tl, br)
-			// iters := mandelbrotIters(v, maxIters)
-			iters := juliaIters(v, z, maxIters)
-			img.Set(x, y, mandelbrotColor(iters, maxIters))
-		}
+	if fractalType == "m" {
+		mandelbrotImage(width, height, tl, br, maxIters, img)
+	} else {
+		juliaImage(width, height, tl, br, maxIters, z, img)
 	}
-	// Save result to file
 	f, err := os.Create("images/image.png")
 	if err == nil {
 		png.Encode(f, img)
