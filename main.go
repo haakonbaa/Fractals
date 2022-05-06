@@ -19,8 +19,8 @@ func parseOptions(options []string) (width, height int, center, z complex128, ra
 		"radius": 1,
 		"real":   0,
 		"imag":   0,
-		"zreal":  0,
-		"zimag":  0,
+		"creal":  0,
+		"cimag":  0,
 	}
 	// set default ints
 	dfi := map[string]int{
@@ -64,7 +64,7 @@ func parseOptions(options []string) (width, height int, center, z complex128, ra
 			}
 		}
 	}
-	return dfi["width"], dfi["height"], complex(dff["real"], dff["imag"]), complex(dff["zreal"], dff["zimag"]), dff["radius"]
+	return dfi["width"], dfi["height"], complex(dff["real"], dff["imag"]), complex(dff["creal"], dff["cimag"]), dff["radius"]
 }
 
 func main() {
@@ -95,7 +95,7 @@ options:
 		fmt.Println(helpString)
 		os.Exit(1)
 	}
-	width, height, center, z, radius := parseOptions(args[1:])
+	width, height, center, c, radius := parseOptions(args[1:])
 
 	// Define image traits
 	lowRight := image.Point{width, height}
@@ -106,7 +106,7 @@ options:
 	if fractalType == "m" {
 		mandelbrotImage(width, height, tl, br, maxIters, img)
 	} else {
-		juliaImage(width, height, tl, br, maxIters, z, img)
+		juliaImage(width, height, tl, br, maxIters, c, img)
 	}
 	f, err := os.Create("images/image.png")
 	if err == nil {

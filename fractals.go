@@ -67,11 +67,11 @@ func mandelbrotImage(width, height int, tl, br complex128, maxIters uint, img *i
 }
 
 // Create an image of the julia set with the specified parameters
-func juliaImage(width, height int, tl, br complex128, maxIters uint, z complex128, img *image.RGBA) {
+func juliaImage(width, height int, tl, br complex128, maxIters uint, c complex128, img *image.RGBA) {
 	for x := 0; x < width; x++ {
 		for y := 0; y < height; y++ {
-			var v complex128 = mapCmplx(x, y, width, height, tl, br)
-			iters := juliaIters(v, z, maxIters)
+			var z complex128 = mapCmplx(x, y, width, height, tl, br)
+			iters := juliaIters(z, c, maxIters)
 			img.Set(x, y, fractalColor(iters, maxIters))
 		}
 	}
