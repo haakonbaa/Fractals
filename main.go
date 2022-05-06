@@ -13,41 +13,58 @@ import (
 // Gets the options passed by user and parses them. Exits with status code 1
 // on wrongly formated input
 func parseOptions(options []string) (width, height int, center, z complex128, radius float64) {
-	// set default values
-	df := map[string]float64{
-		"width":  1920,
-		"height": 1080,
+	// TODO: User is not alerted if an argument passed is invalid!
+	// set default floats
+	dff := map[string]float64{
 		"radius": 1,
 		"real":   0,
 		"imag":   0,
 		"zreal":  0,
 		"zimag":  0,
 	}
-	re := regexp.MustCompile(`-([a-z]*)=([1-9]+[0-9]*(\.[0-9]+)?)`)
+	// set default ints
+	dfi := map[string]int{
+		"width":  1920,
+		"height": 1080,
+	}
+	// First parse all floats
+	refloat := regexp.MustCompile(`-([a-z]*)=([0-9]*(?:\.[0-9]+)?)`)
 	for _, option := range options {
-		var matches = re.FindStringSubmatch(option)
-		if len(matches) >= 3 {
+		var matches = refloat.FindStringSubmatch(option)
+		if len(matches) == 3 {
 			arg := matches[1]
 			sval := matches[2]
-			if _, ok := df[arg]; ok {
+			if _, ok := dff[arg]; ok {
 				if fval, err := strconv.ParseFloat(sval, 64); err == nil {
-					// Got valid formated string, set default value
-					df[arg] = fval
+					dff[arg] = fval
+					fmt.Println(arg, fval)
 				} else {
-					fmt.Println("Could not parse option!")
-					os.Exit(1)
+					fmt.Printf("Could not parse option: %s", option)
 				}
-			} else {
-				fmt.Printf("Invalid option: %s\n", arg)
-				os.Exit(1)
 			}
-		} else {
-			fmt.Printf("Invalid argument '%s'\n", option)
-			os.Exit(1)
 		}
-
 	}
-	return int(df["width"]), int(df["height"]), complex(df["real"], df["imag"]), complex(df["zreal"], df["zimag"]), df["radius"]
+
+	// Secondly parse all ints. Most of this code is copy paste from above, but
+	// the conversion functions Atoi and ParseFloat makes it a little hard do
+	// make functions out of.
+	reint := regexp.MustCompile(`-([a-z]*)=([1-9]+[0-9]*)`)
+	for _, option := range options {
+		var matches = reint.FindStringSubmatch(option)
+		if len(matches) == 3 {
+			arg := matches[1]
+			sval := matches[2]
+			if _, ok := dfi[arg]; ok {
+				if ival, err := strconv.Atoi(sval); err == nil {
+					dfi[arg] = ival
+					fmt.Println(arg, ival)
+				} else {
+					fmt.Printf("Could not parse option: %s", option)
+				}
+			}
+		}
+	}
+	return dfi["width"], dfi["height"], complex(dff["real"], dff["imag"]), complex(dff["zreal"], dff["zimag"]), dff["radius"]
 }
 
 func main() {
