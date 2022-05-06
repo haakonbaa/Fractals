@@ -28,7 +28,7 @@ func parseOptions(options []string) (width, height int, center, z complex128, ra
 		"height": 1080,
 	}
 	// First parse all floats
-	refloat := regexp.MustCompile(`-([a-z]*)=([0-9]*(?:\.[0-9]+)?)`)
+	refloat := regexp.MustCompile(`-([a-z]*)=(-?[0-9]*(?:\.[0-9]+)?)`)
 	for _, option := range options {
 		var matches = refloat.FindStringSubmatch(option)
 		if len(matches) == 3 {
