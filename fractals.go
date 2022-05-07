@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	"math"
@@ -66,6 +67,13 @@ func mandelbrotImage(width, height int, tl, br complex128, maxIters uint, img *i
 	}
 }
 
+// Create an gif of the mandelbrot set with the specified parameters. zooming in
+// at at the center
+func mandelbrotGIF(width, height int, tl, br complex128, maxIters uint, img *image.RGBA, zoom uint) {
+	fmt.Printf("mandelbrot gif with zoom: %d\n", zoom)
+	// TODO: Implement
+}
+
 // Create an image of the julia set with the specified parameters
 func juliaImage(width, height int, tl, br complex128, maxIters uint, c complex128, img *image.RGBA) {
 	for x := 0; x < width; x++ {
@@ -75,6 +83,13 @@ func juliaImage(width, height int, tl, br complex128, maxIters uint, c complex12
 			img.Set(x, y, fractalColor(iters, maxIters))
 		}
 	}
+}
+
+// Create an gif of the julia set with the specified parameters. zooming in
+// at at the center
+func juliaGIF(width, height int, tl, br complex128, maxIters uint, c complex128, img *image.RGBA, zoom uint) {
+	fmt.Printf("julia set gif with zoom: %d\n", zoom)
+	// TODO: Implement
 }
 
 // Max returns the max of two unsigned ints

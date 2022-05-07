@@ -12,7 +12,7 @@ import (
 
 // Gets the options passed by user and parses them. Exits with status code 1
 // on wrongly formated input
-func parseOptions(options []string) (width, height int, center, z complex128, radius float64, iters uint) {
+func parseOptions(options []string) (width, height int, center, z complex128, radius float64, iters uint, makeGif bool, zoom uint) {
 	// TODO: User is not alerted if an argument passed is invalid!
 	// set default floats
 	dff := map[string]float64{
@@ -27,10 +27,16 @@ func parseOptions(options []string) (width, height int, center, z complex128, ra
 		"width":  1920,
 		"height": 1080,
 		"iters":  200,
+		"zoom":   2,
 	}
+	makeGif = false
 	// First parse all floats
 	refloat := regexp.MustCompile(`-([a-z]*)=(-?[0-9]*(?:\.[0-9]+)?)`)
 	for _, option := range options {
+		if option == "gif" {
+			makeGif = true
+			break
+		}
 		var matches = refloat.FindStringSubmatch(option)
 		if len(matches) == 3 {
 			arg := matches[1]
@@ -65,7 +71,11 @@ func parseOptions(options []string) (width, height int, center, z complex128, ra
 			}
 		}
 	}
-	return dfi["width"], dfi["height"], complex(dff["real"], dff["imag"]), complex(dff["creal"], dff["cimag"]), dff["radius"], uint(dfi["iters"])
+	return dfi["width"], dfi["height"],
+		complex(dff["real"], dff["imag"]),
+		complex(dff["creal"], dff["cimag"]),
+		dff["radius"], uint(dfi["iters"]),
+		makeGif, uint(dfi["zoom"])
 }
 
 func main() {
@@ -85,7 +95,8 @@ options:
   -radius=<radius>		set radius to include in image to <radius>
   -creal=<creal>		set real part of c in julia set to <creal>
   -cimag=<cimag>		set imaginary part of c in julia set to <cimag>
-  -iters=<iters>		set the max ammonut of iterations per pixel to <iters>`
+  -iters=<iters>		set the max ammonut of iterations per pixel to <iters>
+  -zoom=<exp>			set the zoom of a gif to 10^<exp>`
 
 	// parse command line arguments
 	if len(args) == 0 {
@@ -97,16 +108,24 @@ options:
 		fmt.Println(helpString)
 		os.Exit(1)
 	}
-	width, height, center, c, radius, maxIters := parseOptions(args[1:])
+	width, height, center, c, radius, maxIters, makeGif, zoom := parseOptions(args[1:])
 
 	// Define image traits
 	lowRight := image.Point{width, height}
 	img := image.NewRGBA(image.Rectangle{image.Point{0, 0}, lowRight})
 	br, tl := rectWithCircleInscribed(width, height, center, radius)
-	if fractalType == "m" {
-		mandelbrotImage(width, height, tl, br, maxIters, img)
+	if makeGif {
+		if fractalType == "m" {
+			mandelbrotGIF(width, height, tl, br, maxIters, img, zoom)
+		} else {
+			juliaGIF(width, height, tl, br, maxIters, c, img, zoom)
+		}
 	} else {
-		juliaImage(width, height, tl, br, maxIters, c, img)
+		if fractalType == "m" {
+			mandelbrotImage(width, height, tl, br, maxIters, img)
+		} else {
+			juliaImage(width, height, tl, br, maxIters, c, img)
+		}
 	}
 	f, err := os.Create("image.png")
 	if err == nil {
