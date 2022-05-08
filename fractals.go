@@ -69,8 +69,8 @@ func mandelbrotImage(width, height int, tl, br complex128, maxIters uint, img *i
 
 // Create an gif of the mandelbrot set with the specified parameters. zooming in
 // at at the center
-func mandelbrotGIF(width, height int, tl, br complex128, maxIters uint, img *image.RGBA, zoom uint) {
-	fmt.Printf("mandelbrot gif with zoom: %d\n", zoom)
+func mandelbrotGIF(width, height int, tl, br complex128, maxIters uint, img *image.RGBA, zoom float64) {
+	fmt.Printf("mandelbrot gif with zoom: %f\n", zoom)
 	// TODO: Implement
 }
 
@@ -87,8 +87,8 @@ func juliaImage(width, height int, tl, br complex128, maxIters uint, c complex12
 
 // Create an gif of the julia set with the specified parameters. zooming in
 // at at the center
-func juliaGIF(width, height int, tl, br complex128, maxIters uint, c complex128, img *image.RGBA, zoom uint) {
-	fmt.Printf("julia set gif with zoom: %d\n", zoom)
+func juliaGIF(width, height int, tl, br complex128, maxIters uint, c complex128, img *image.RGBA, zoom float64) {
+	fmt.Printf("julia set gif with zoom: %f\n", zoom)
 	// TODO: Implement
 }
 

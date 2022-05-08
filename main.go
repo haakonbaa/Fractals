@@ -10,72 +10,66 @@ import (
 	"strings"
 )
 
+type Option struct {
+	val float64
+	re  *regexp.Regexp
+}
+
 // Gets the options passed by user and parses them. Exits with status code 1
 // on wrongly formated input
-func parseOptions(options []string) (width, height int, center, z complex128, radius float64, iters uint, makeGif bool, zoom uint) {
+func parseOptions(options []string) (map[string]float64, bool) {
 	// TODO: User is not alerted if an argument passed is invalid!
-	// set default floats
-	dff := map[string]float64{
-		"radius": 1,
-		"real":   0,
-		"imag":   0,
-		"creal":  0,
-		"cimag":  0,
+	// set default floats.val
+	reFloat := regexp.MustCompile(`-?[0-9]*(?:\.[0-9]+)?$`)
+	reFloatP := regexp.MustCompile(`[1-9]+[0-9]*(?:\.[0-9]*)?$`)
+	reIntP := regexp.MustCompile(`[1-9]+[0-9]*$`)
+	reOption := regexp.MustCompile(`-([a-zA-Z]+)=([^ ]+)$`)
+	df := map[string]Option{
+		"radius": {val: 1, re: reFloatP},
+		"real":   {val: 0, re: reFloat},
+		"imag":   {val: 0, re: reFloat},
+		"creal":  {val: 0, re: reFloat},
+		"cimag":  {val: 0, re: reFloat},
+		"width":  {val: 1920, re: reIntP},
+		"height": {val: 1080, re: reIntP},
+		"iters":  {val: 200, re: reIntP},
+		"zoom":   {val: 0, re: reFloatP},
 	}
-	// set default ints
-	dfi := map[string]int{
-		"width":  1920,
-		"height": 1080,
-		"iters":  200,
-		"zoom":   2,
+	makeGif := false
+	parsedOptions := make(map[string]float64)
+	for name, opt := range df {
+		parsedOptions[name] = opt.val
 	}
-	makeGif = false
 	// First parse all floats
-	refloat := regexp.MustCompile(`-([a-z]*)=(-?[0-9]*(?:\.[0-9]+)?)`)
 	for _, option := range options {
 		if option == "gif" {
 			makeGif = true
 			break
 		}
-		var matches = refloat.FindStringSubmatch(option)
+		matches := reOption.FindStringSubmatch(option)
 		if len(matches) == 3 {
-			arg := matches[1]
-			sval := matches[2]
-			if _, ok := dff[arg]; ok {
-				if fval, err := strconv.ParseFloat(sval, 64); err == nil {
-					dff[arg] = fval
-					fmt.Println(arg, fval)
+			name := matches[1]
+			val := matches[2]
+			if _, ok := df[name]; ok {
+				parsedValue := df[name].re.FindStringSubmatch(val)
+				if len(parsedValue) == 1 {
+					fval, err := strconv.ParseFloat(parsedValue[0], 64)
+					if err == nil {
+						parsedOptions[name] = fval
+					} else {
+						fmt.Printf("Program error, could not parse %s\n", parsedValue[0])
+					}
 				} else {
-					fmt.Printf("Could not parse option: %s", option)
+					fmt.Printf("Could not parse number %s of option %s\n", val, name)
 				}
+			} else {
+				fmt.Printf("Invalid option name: %s\n", name)
 			}
+		} else {
+			fmt.Printf("Invalid option: %s\n", option)
 		}
 	}
-
-	// Secondly parse all ints. Most of this code is copy paste from above, but
-	// the conversion functions Atoi and ParseFloat makes it a little hard do
-	// make functions out of.
-	reint := regexp.MustCompile(`-([a-z]*)=([1-9]+[0-9]*)`)
-	for _, option := range options {
-		var matches = reint.FindStringSubmatch(option)
-		if len(matches) == 3 {
-			arg := matches[1]
-			sval := matches[2]
-			if _, ok := dfi[arg]; ok {
-				if ival, err := strconv.Atoi(sval); err == nil {
-					dfi[arg] = ival
-					fmt.Println(arg, ival)
-				} else {
-					fmt.Printf("Could not parse option: %s", option)
-				}
-			}
-		}
-	}
-	return dfi["width"], dfi["height"],
-		complex(dff["real"], dff["imag"]),
-		complex(dff["creal"], dff["cimag"]),
-		dff["radius"], uint(dfi["iters"]),
-		makeGif, uint(dfi["zoom"])
+	return parsedOptions, makeGif
 }
 
 func main() {
@@ -108,7 +102,15 @@ options:
 		fmt.Println(helpString)
 		os.Exit(1)
 	}
-	width, height, center, c, radius, maxIters, makeGif, zoom := parseOptions(args[1:])
+	//width, height, center, c, radius, maxIters, makeGif, zoom := parseOptions(args[1:])
+	options, makeGif := parseOptions(args[1:])
+	width := int(options["width"])
+	height := int(options["height"])
+	center := complex(options["real"], options["imag"])
+	c := complex(options["creal"], options["cimag"])
+	radius := options["radius"]
+	maxIters := uint(options["iters"])
+	zoom := options["zoom"]
 
 	// Define image traits
 	lowRight := image.Point{width, height}
