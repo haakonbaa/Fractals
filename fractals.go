@@ -57,7 +57,8 @@ func mapCmplx(x int, y int, width, height int, tl complex128, br complex128) com
 }
 
 // Create an image of the mandelbrot set with the specified parameters
-func mandelbrotImage(width, height int, tl, br complex128, maxIters uint, img *image.RGBA) {
+func mandelbrotImage(width, height int, tl, br complex128, maxIters uint, img *image.RGBA) *image.RGBA {
+	img = image.NewRGBA(image.Rectangle{image.Point{0, 0}, image.Point{width, height}})
 	for x := 0; x < width; x++ {
 		for y := 0; y < height; y++ {
 			var v complex128 = mapCmplx(x, y, width, height, tl, br)
@@ -65,17 +66,21 @@ func mandelbrotImage(width, height int, tl, br complex128, maxIters uint, img *i
 			img.Set(x, y, fractalColor(iters, maxIters))
 		}
 	}
+	return img
 }
 
 // Create an gif of the mandelbrot set with the specified parameters. zooming in
 // at at the center
-func mandelbrotGIF(width, height int, tl, br complex128, maxIters uint, img *image.RGBA, zoom float64) {
+func mandelbrotGIF(width, height int, tl, br complex128, maxIters uint, img *image.RGBA, zoom float64) []*image.Paletted {
 	fmt.Printf("mandelbrot gif with zoom: %f\n", zoom)
 	// TODO: Implement
+	var images []*image.Paletted
+	return images
 }
 
 // Create an image of the julia set with the specified parameters
-func juliaImage(width, height int, tl, br complex128, maxIters uint, c complex128, img *image.RGBA) {
+func juliaImage(width, height int, tl, br complex128, maxIters uint, c complex128, img *image.RGBA) *image.RGBA {
+	img = image.NewRGBA(image.Rectangle{image.Point{0, 0}, image.Point{width, height}})
 	for x := 0; x < width; x++ {
 		for y := 0; y < height; y++ {
 			var z complex128 = mapCmplx(x, y, width, height, tl, br)
@@ -83,13 +88,16 @@ func juliaImage(width, height int, tl, br complex128, maxIters uint, c complex12
 			img.Set(x, y, fractalColor(iters, maxIters))
 		}
 	}
+	return img
 }
 
 // Create an gif of the julia set with the specified parameters. zooming in
 // at at the center
-func juliaGIF(width, height int, tl, br complex128, maxIters uint, c complex128, img *image.RGBA, zoom float64) {
+func juliaGIF(width, height int, tl, br complex128, maxIters uint, c complex128, img *image.RGBA, zoom float64) []*image.Paletted {
 	fmt.Printf("julia set gif with zoom: %f\n", zoom)
 	// TODO: Implement
+	var images []*image.Paletted
+	return images
 }
 
 // Max returns the max of two unsigned ints

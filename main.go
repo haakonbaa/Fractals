@@ -113,27 +113,31 @@ options:
 	zoom := options["zoom"]
 
 	// Define image traits
-	lowRight := image.Point{width, height}
-	img := image.NewRGBA(image.Rectangle{image.Point{0, 0}, lowRight})
+	var img *image.RGBA
 	br, tl := rectWithCircleInscribed(width, height, center, radius)
 	if makeGif {
+		var images []*image.Paletted
 		if fractalType == "m" {
-			mandelbrotGIF(width, height, tl, br, maxIters, img, zoom)
+			images = mandelbrotGIF(width, height, tl, br, maxIters, img, zoom)
 		} else {
-			juliaGIF(width, height, tl, br, maxIters, c, img, zoom)
+			images = juliaGIF(width, height, tl, br, maxIters, c, img, zoom)
 		}
+		// TODO: SAVE images
+
 	} else {
+		var img *image.RGBA
 		if fractalType == "m" {
-			mandelbrotImage(width, height, tl, br, maxIters, img)
+			img = mandelbrotImage(width, height, tl, br, maxIters, img)
 		} else {
-			juliaImage(width, height, tl, br, maxIters, c, img)
+			img = juliaImage(width, height, tl, br, maxIters, c, img)
 		}
+		f, err := os.Create("image.png")
+		if err == nil {
+			png.Encode(f, img)
+			os.Exit(0)
+		}
+		fmt.Println(err)
+		os.Exit(1)
+
 	}
-	f, err := os.Create("image.png")
-	if err == nil {
-		png.Encode(f, img)
-		os.Exit(0)
-	}
-	fmt.Println(err)
-	os.Exit(1)
 }
