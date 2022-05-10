@@ -128,13 +128,14 @@ options:
 			delays = append(delays, 50)
 		}
 		f, _ := os.OpenFile("image.gif", os.O_WRONLY|os.O_CREATE, 0600)
-		fmt.Println("images =", delays)
 		defer f.Close()
 		err := gif.EncodeAll(f, &gif.GIF{
 			Image: images,
 			Delay: delays,
 		})
-		fmt.Println(err)
+		if err != nil {
+			fmt.Println(err)
+		}
 		// TODO: SAVE images
 
 	} else {
