@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"image"
+	"image/gif"
 	"image/png"
 	"os"
 	"regexp"
@@ -117,11 +118,23 @@ options:
 	br, tl := rectWithCircleInscribed(width, height, center, radius)
 	if makeGif {
 		var images []*image.Paletted
+		var delays []int
 		if fractalType == "m" {
 			images = mandelbrotGIF(width, height, tl, br, maxIters, img, zoom)
 		} else {
 			images = juliaGIF(width, height, tl, br, maxIters, c, img, zoom)
 		}
+		for i := 0; i < len(images); i++ {
+			delays = append(delays, 50)
+		}
+		f, _ := os.OpenFile("image.gif", os.O_WRONLY|os.O_CREATE, 0600)
+		fmt.Println("images =", delays)
+		defer f.Close()
+		err := gif.EncodeAll(f, &gif.GIF{
+			Image: images,
+			Delay: delays,
+		})
+		fmt.Println(err)
 		// TODO: SAVE images
 
 	} else {
