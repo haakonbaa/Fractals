@@ -85,12 +85,13 @@ func mandelbrotGifImage(width, height int, tl, br complex128, maxIters uint) *im
 
 // Create an gif of the mandelbrot set with the specified parameters. zooming in
 // at at the center
-func mandelbrotGIF(width, height int, tl, br complex128, maxIters uint, img *image.RGBA, zoom float64) []*image.Paletted {
+func mandelbrotGIF(width, height int, tl, br complex128, maxIters uint, img *image.RGBA, zoom, scale float64) []*image.Paletted {
 	var images []*image.Paletted
 	center := (tl + br) / 2
-	for i := 0; i < 6; i++ {
-		tl = center + 0.8*(tl-center)
-		br = center + 0.8*(br-center)
+	mult := complex(math.Exp(-scale), 0)
+	for i := 0; i < 16; i++ {
+		tl = center + mult*(tl-center)
+		br = center + mult*(br-center)
 		images = append(images, mandelbrotGifImage(width, height, tl, br, maxIters))
 	}
 	return images
@@ -111,7 +112,7 @@ func juliaImage(width, height int, tl, br complex128, maxIters uint, c complex12
 
 // Create an gif of the julia set with the specified parameters. zooming in
 // at at the center
-func juliaGIF(width, height int, tl, br complex128, maxIters uint, c complex128, img *image.RGBA, zoom float64) []*image.Paletted {
+func juliaGIF(width, height int, tl, br complex128, maxIters uint, c complex128, img *image.RGBA, zoom, scale float64) []*image.Paletted {
 	fmt.Printf("julia set gif with zoom: %f\n", zoom)
 	// TODO: Implement
 	var images []*image.Paletted

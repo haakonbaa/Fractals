@@ -19,12 +19,12 @@ type Option struct {
 // Gets the options passed by user and parses them. Exits with status code 1
 // on wrongly formated input
 func parseOptions(options []string) (map[string]float64, bool) {
-	// TODO: User is not alerted if an argument passed is invalid!
-	// set default floats.val
-	reFloat := regexp.MustCompile(`-?[0-9]*(?:\.[0-9]+)?$`)
-	reFloatP := regexp.MustCompile(`[1-9]+[0-9]*(?:\.[0-9]*)?$`)
-	reIntP := regexp.MustCompile(`[1-9]+[0-9]*$`)
+	// Define patterns for different types of options
+	reFloat := regexp.MustCompile(`-?[0-9]*(?:\.[0-9]+)?$`)      // -inf < x < inf
+	reFloatP := regexp.MustCompile(`[1-9]+[0-9]*(?:\.[0-9]*)?$`) // 0 < x
+	reIntP := regexp.MustCompile(`[1-9]+[0-9]*$`)                // 1 <= x in Z
 	reOption := regexp.MustCompile(`-([a-zA-Z]+)=([^ ]+)$`)
+	// Set default options
 	df := map[string]Option{
 		"radius": {val: 1, re: reFloatP},
 		"real":   {val: 0, re: reFloat},
@@ -35,38 +35,39 @@ func parseOptions(options []string) (map[string]float64, bool) {
 		"height": {val: 1080, re: reIntP},
 		"iters":  {val: 200, re: reIntP},
 		"zoom":   {val: 0, re: reFloatP},
+		"scale":  {val: 0.5, re: reFloatP},
 	}
 	makeGif := false
 	parsedOptions := make(map[string]float64)
 	for name, opt := range df {
 		parsedOptions[name] = opt.val
 	}
-	// First parse all floats
+	// Parse all program arguments
 	for _, option := range options {
 		if option == "gif" {
 			makeGif = true
-			break
+			continue
 		}
 		matches := reOption.FindStringSubmatch(option)
 		if len(matches) != 3 {
 			fmt.Printf("Invalid option: %s\n", option)
-			break
+			continue
 		}
 		name := matches[1]
 		val := matches[2]
 		if _, ok := df[name]; !ok {
 			fmt.Printf("Invalid option name: %s\n", name)
-			break
+			continue
 		}
 		parsedValue := df[name].re.FindStringSubmatch(val)
 		if len(parsedValue) != 1 {
 			fmt.Printf("Could not parse number %s of option %s\n", val, name)
-			break
+			continue
 		}
 		fval, err := strconv.ParseFloat(parsedValue[0], 64)
 		if err != nil {
 			fmt.Printf("Program error, could not parse %s\n", parsedValue[0])
-			break
+			continue
 		}
 		parsedOptions[name] = fval
 	}
@@ -91,7 +92,9 @@ options:
   -creal=<creal>		set real part of c in julia set to <creal>
   -cimag=<cimag>		set imaginary part of c in julia set to <cimag>
   -iters=<iters>		set the max ammonut of iterations per pixel to <iters>
-  -zoom=<exp>			set the zoom of a gif to 10^<exp>`
+  -zoom=<exp>			set the max zoom of a gif to 10^<exp>
+  -scale=<scale>		set the factor for which each image in the gif is
+				scaled to exp(-<scale>). Default is 1/2 -> 1.65 scaling`
 
 	// parse command line arguments
 	if len(args) == 0 {
@@ -112,6 +115,7 @@ options:
 	radius := options["radius"]
 	maxIters := uint(options["iters"])
 	zoom := options["zoom"]
+	scale := options["scale"]
 
 	// Define image traits
 	var img *image.RGBA
@@ -120,9 +124,9 @@ options:
 		var images []*image.Paletted
 		var delays []int
 		if fractalType == "m" {
-			images = mandelbrotGIF(width, height, tl, br, maxIters, img, zoom)
+			images = mandelbrotGIF(width, height, tl, br, maxIters, img, zoom, scale)
 		} else {
-			images = juliaGIF(width, height, tl, br, maxIters, c, img, zoom)
+			images = juliaGIF(width, height, tl, br, maxIters, c, img, zoom, scale)
 		}
 		for i := 0; i < len(images); i++ {
 			delays = append(delays, 50)
