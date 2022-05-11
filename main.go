@@ -48,27 +48,27 @@ func parseOptions(options []string) (map[string]float64, bool) {
 			break
 		}
 		matches := reOption.FindStringSubmatch(option)
-		if len(matches) == 3 {
-			name := matches[1]
-			val := matches[2]
-			if _, ok := df[name]; ok {
-				parsedValue := df[name].re.FindStringSubmatch(val)
-				if len(parsedValue) == 1 {
-					fval, err := strconv.ParseFloat(parsedValue[0], 64)
-					if err == nil {
-						parsedOptions[name] = fval
-					} else {
-						fmt.Printf("Program error, could not parse %s\n", parsedValue[0])
-					}
-				} else {
-					fmt.Printf("Could not parse number %s of option %s\n", val, name)
-				}
-			} else {
-				fmt.Printf("Invalid option name: %s\n", name)
-			}
-		} else {
+		if len(matches) != 3 {
 			fmt.Printf("Invalid option: %s\n", option)
+			break
 		}
+		name := matches[1]
+		val := matches[2]
+		if _, ok := df[name]; !ok {
+			fmt.Printf("Invalid option name: %s\n", name)
+			break
+		}
+		parsedValue := df[name].re.FindStringSubmatch(val)
+		if len(parsedValue) != 1 {
+			fmt.Printf("Could not parse number %s of option %s\n", val, name)
+			break
+		}
+		fval, err := strconv.ParseFloat(parsedValue[0], 64)
+		if err != nil {
+			fmt.Printf("Program error, could not parse %s\n", parsedValue[0])
+			break
+		}
+		parsedOptions[name] = fval
 	}
 	return parsedOptions, makeGif
 }
