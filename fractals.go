@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"image/color/palette"
 	"math"
 	"math/cmplx"
 )
@@ -71,8 +70,8 @@ func mandelbrotImage(width, height int, tl, br complex128, maxIters uint, img *i
 }
 
 // Create a paletted image of the mandelbrot set with the specified parameters
-func mandelbrotGifImage(width, height int, tl, br complex128, maxIters uint) *image.Paletted {
-	img := image.NewPaletted(image.Rect(0, 0, width, height), palette.Plan9)
+func mandelbrotGifImage(width, height int, tl, br complex128, maxIters uint, palette *[]color.Color) *image.Paletted {
+	img := image.NewPaletted(image.Rect(0, 0, width, height), *palette)
 	for x := 0; x < width; x++ {
 		for y := 0; y < height; y++ {
 			var v complex128 = mapCmplx(x, y, width, height, tl, br)
@@ -86,13 +85,18 @@ func mandelbrotGifImage(width, height int, tl, br complex128, maxIters uint) *im
 // Create an gif of the mandelbrot set with the specified parameters. zooming in
 // at at the center
 func mandelbrotGIF(width, height int, tl, br complex128, maxIters uint, img *image.RGBA, zoom, scale float64) []*image.Paletted {
+	// create palette
+	palette := new([]color.Color)
+	for i := uint(0); i <= maxIters; i++ {
+		*palette = append(*palette, fractalColor(i, maxIters))
+	}
 	var images []*image.Paletted
 	center := (tl + br) / 2
 	mult := complex(math.Exp(-scale), 0)
 	for i := 0; i < 16; i++ {
 		tl = center + mult*(tl-center)
 		br = center + mult*(br-center)
-		images = append(images, mandelbrotGifImage(width, height, tl, br, maxIters))
+		images = append(images, mandelbrotGifImage(width, height, tl, br, maxIters, palette))
 	}
 	return images
 }
