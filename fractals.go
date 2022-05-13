@@ -34,18 +34,24 @@ func fractalColor(iters, maxIters uint) color.RGBA {
 	if iters == maxIters {
 		return color.RGBA{0, 0, 0, 0xff}
 	}
-	// color when many iterations are required
-	lr, lg, lb := 10.0, 10.0, 40.0
-	// color when few iterations are required
-	hr, hg, hb := 255.0, 255.0, 0.0
-	// logarithmically interpolate between values
-	scale := float64(iters) / (float64(maxIters - 1))
-	scale = math.Log(scale*(math.E-1) + 1)
+	palette := [][]float64{
+		{0x44, 0x34, 0x4f, 0xff},
+		{0x7d, 0x80, 0xda, 0xff},
+		{0xee, 0x42, 0x66, 0xff},
+		{0x9e, 0xbc, 0x9e, 0xff},
+	}
+
+	var plen uint = uint(len(palette))
+	var gradients uint = 256 / plen
+	index1 := uint(iters / gradients % plen)
+	index2 := (index1 + 1) % plen
+	weight := float64(iters-index1*gradients) / float64(gradients)
 	return color.RGBA{
-		uint8(scale*hr + (1-scale)*lr),
-		uint8(scale*hg + (1-scale)*lg),
-		uint8(scale*hb + (1-scale)*lb),
-		0xff}
+		uint8((1-weight)*palette[index1][0] + weight*palette[index2][0]),
+		uint8((1-weight)*palette[index1][1] + weight*palette[index2][1]),
+		uint8((1-weight)*palette[index1][2] + weight*palette[index2][2]),
+		0xff,
+	}
 }
 
 // Maps a point {(x,y) in N^2 | 0 <= x < dims.X, 0 <= y < dims.Y } to
@@ -87,13 +93,15 @@ func mandelbrotGifImage(width, height int, tl, br complex128, maxIters uint, pal
 func mandelbrotGIF(width, height int, tl, br complex128, maxIters uint, img *image.RGBA, zoom, scale float64) []*image.Paletted {
 	// create palette
 	palette := new([]color.Color)
-	for i := uint(0); i <= maxIters; i++ {
+	for i := uint(0); i < Min(maxIters, 255); i++ {
 		*palette = append(*palette, fractalColor(i, maxIters))
 	}
+	*palette = append(*palette, fractalColor(maxIters, maxIters))
 	var images []*image.Paletted
 	center := (tl + br) / 2
 	mult := complex(math.Exp(-scale), 0)
-	for i := 0; i < 16; i++ {
+	zoomIters := int(math.Ceil(math.Log(10) * zoom / scale))
+	for i := 0; i <= zoomIters; i++ {
 		tl = center + mult*(tl-center)
 		br = center + mult*(br-center)
 		images = append(images, mandelbrotGifImage(width, height, tl, br, maxIters, palette))
@@ -123,12 +131,20 @@ func juliaGIF(width, height int, tl, br complex128, maxIters uint, c complex128,
 	return images
 }
 
-// Max returns the max of two unsigned ints
-func Max(x, y uint) uint {
+// Max returns the max of two numbers
+func Max[T int | uint](x, y T) T {
 	if x > y {
 		return x
 	}
 	return y
+}
+
+// Min returns the min of two numbers
+func Min[T int | uint](x, y T) T {
+	if x > y {
+		return y
+	}
+	return x
 }
 
 // Find square defined by upper left and lower right complex numbers
