@@ -145,9 +145,9 @@ options:
 	} else {
 		var img *image.RGBA
 		if fractalType == "m" {
-			img = mandelbrotImage(width, height, tl, br, maxIters, img)
+			img = mandelbrotImage(width, height, tl, br, maxIters)
 		} else {
-			img = juliaImage(width, height, tl, br, maxIters, c, img)
+			img = juliaImage(width, height, tl, br, maxIters, c)
 		}
 		f, err := os.Create("image.png")
 		if err == nil {
