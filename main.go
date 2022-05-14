@@ -20,10 +20,10 @@ type Option struct {
 // on wrongly formated input
 func parseOptions(options []string) (map[string]float64, bool) {
 	// Define patterns for different types of options
-	reFloat := regexp.MustCompile(`-?[0-9]*(?:\.[0-9]+)?$`) // -inf < x < inf
-	reFloatP := regexp.MustCompile(`[0-9]*(?:\.[0-9]*)?$`)  // 0 < x
-	reIntP := regexp.MustCompile(`[1-9]+[0-9]*$`)           // 1 <= x in Z
-	reOption := regexp.MustCompile(`-([a-zA-Z]+)=([^ ]+)$`)
+	reFloat := regexp.MustCompile(`^-?[0-9]*(?:\.[0-9]+)?$`) // -inf < x < inf
+	reFloatP := regexp.MustCompile(`^[0-9]*(?:\.[0-9]*)?$`)  // 0 < x
+	reIntP := regexp.MustCompile(`^[1-9]+[0-9]*$`)           // 1 <= x in Z
+	reOption := regexp.MustCompile(`^-([a-zA-Z]+)=([^ ]+)$`)
 	// Set default options
 	df := map[string]Option{
 		"radius": {val: 1, re: reFloatP},
