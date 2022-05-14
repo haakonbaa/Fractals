@@ -19,7 +19,7 @@ To get detailed info about the usage, simply run the program without any argumen
 
 ### Generating a Filled Jula set fractal
 ```bash
-./fractals j -creal=-0.8 -cimag=0.156 -iters=1000 
+./fractals j -creal=-1.25 -cimag=0.1 
 ```
 ![julia](./images/julia.png)
 
