@@ -28,17 +28,35 @@ func juliaIters(z, c complex128, maxIters uint) uint {
 	return i
 }
 
-// Gets the color to color a pixel based on the iterations
-func fractalColor(iters, maxIters uint) color.RGBA {
-	if iters == maxIters {
-		return color.RGBA{0, 0, 0, 0xff}
-	}
-	palette := [][]float64{
+// After adding a palette the help text and regular expression that
+// parses the arguments must be updated
+var PALETTE [][][]float64 = [][][]float64{
+	{
 		{0x10, 0x10, 0x40, 0xff},
 		{0x7d, 0x80, 0xda, 0xff},
 		{0xee, 0x42, 0x66, 0xff},
 		{0x9e, 0xbc, 0x9e, 0xff},
+	},
+	{
+		{0x7a, 0x54, 0x79, 0xff},
+		{0xd5, 0x60, 0x73, 0xff},
+		{0xec, 0x9e, 0x69, 0xff},
+		{0xff, 0xff, 0x57, 0xff},
+	},
+	{
+		{0xff, 0x00, 0x00, 0xff},
+		{0x00, 0xff, 0x00, 0xff},
+		{0x00, 0x00, 0xff, 0xff},
+		{0xff, 0xff, 0x00, 0xff},
+	},
+}
+
+// Gets the color to color a pixel based on the iterations
+func fractalColor(iters, maxIters uint, paletteNum int) color.RGBA {
+	if iters == maxIters {
+		return color.RGBA{0, 0, 0, 0xff}
 	}
+	palette := PALETTE[paletteNum]
 
 	var plen uint = uint(len(palette))
 	var gradients uint = 256 / plen
@@ -66,32 +84,32 @@ type ImageType interface {
 }
 
 // Create an image of the mandelbrot set with the specified parameters
-func mandelbrotImage(width, height int, tl, br complex128, maxIters uint, img ImageType) {
+func mandelbrotImage(width, height int, tl, br complex128, maxIters uint, img ImageType, paletteNum int) {
 	for x := 0; x < width; x++ {
 		for y := 0; y < height; y++ {
 			var v complex128 = mapCmplx(x, y, width, height, tl, br)
 			iters := mandelbrotIters(v, maxIters)
-			img.Set(x, y, fractalColor(iters, maxIters))
+			img.Set(x, y, fractalColor(iters, maxIters, paletteNum))
 		}
 	}
 }
 
 // Create an gif of the mandelbrot set with the specified parameters. zooming in
 // at at the center
-func mandelbrotGIF(width, height int, tl, br complex128, maxIters uint, img *image.RGBA, zoom, scale float64) []*image.Paletted {
+func mandelbrotGIF(width, height int, tl, br complex128, maxIters uint, img *image.RGBA, zoom, scale float64, paletteNum int) []*image.Paletted {
 	// create palette
 	palette := new([]color.Color)
 	for i := uint(0); i < Min(maxIters, 255); i++ {
-		*palette = append(*palette, fractalColor(i, maxIters))
+		*palette = append(*palette, fractalColor(i, maxIters, paletteNum))
 	}
-	*palette = append(*palette, fractalColor(maxIters, maxIters))
+	*palette = append(*palette, fractalColor(maxIters, maxIters, paletteNum))
 	var images []*image.Paletted
 	center := (tl + br) / 2
 	mult := complex(math.Exp(-scale), 0)
 	zoomIters := int(math.Ceil(math.Log(10) * zoom / scale))
 	for i := 0; i <= zoomIters; i++ {
 		img := image.NewPaletted(image.Rect(0, 0, width, height), *palette)
-		mandelbrotImage(width, height, tl, br, maxIters, img)
+		mandelbrotImage(width, height, tl, br, maxIters, img, paletteNum)
 		images = append(images, img)
 		tl = center + mult*(tl-center)
 		br = center + mult*(br-center)
@@ -100,32 +118,32 @@ func mandelbrotGIF(width, height int, tl, br complex128, maxIters uint, img *ima
 }
 
 // Create an image of the julia set with the specified parameters
-func juliaImage(width, height int, tl, br complex128, maxIters uint, c complex128, img ImageType) {
+func juliaImage(width, height int, tl, br complex128, maxIters uint, c complex128, img ImageType, paletteNum int) {
 	for x := 0; x < width; x++ {
 		for y := 0; y < height; y++ {
 			var z complex128 = mapCmplx(x, y, width, height, tl, br)
 			iters := juliaIters(z, c, maxIters)
-			img.Set(x, y, fractalColor(iters, maxIters))
+			img.Set(x, y, fractalColor(iters, maxIters, paletteNum))
 		}
 	}
 }
 
 // Create an gif of the julia set with the specified parameters. zooming in
 // at at the center
-func juliaGIF(width, height int, tl, br complex128, maxIters uint, c complex128, img *image.RGBA, zoom, scale float64) []*image.Paletted {
+func juliaGIF(width, height int, tl, br complex128, maxIters uint, c complex128, img *image.RGBA, zoom, scale float64, paletteNum int) []*image.Paletted {
 	// create palette
 	palette := new([]color.Color)
 	for i := uint(0); i < Min(maxIters, 255); i++ {
-		*palette = append(*palette, fractalColor(i, maxIters))
+		*palette = append(*palette, fractalColor(i, maxIters, paletteNum))
 	}
-	*palette = append(*palette, fractalColor(maxIters, maxIters))
+	*palette = append(*palette, fractalColor(maxIters, maxIters, paletteNum))
 	var images []*image.Paletted
 	center := (tl + br) / 2
 	mult := complex(math.Exp(-scale), 0)
 	zoomIters := int(math.Ceil(math.Log(10) * zoom / scale))
 	for i := 0; i <= zoomIters; i++ {
 		img := image.NewPaletted(image.Rect(0, 0, width, height), *palette)
-		juliaImage(width, height, tl, br, maxIters, c, img)
+		juliaImage(width, height, tl, br, maxIters, c, img, paletteNum)
 		images = append(images, img)
 		tl = center + mult*(tl-center)
 		br = center + mult*(br-center)

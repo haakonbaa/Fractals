@@ -24,19 +24,21 @@ func parseOptions(options []string) (map[string]float64, bool, string) {
 	reFloatP := regexp.MustCompile(`^[0-9]*(?:\.[0-9]*)?$`)  // 0 < x
 	reIntP := regexp.MustCompile(`^[1-9]+[0-9]*$`)           // 1 <= x in Z
 	reOption := regexp.MustCompile(`^-([a-zA-Z]+)=([^ ]+)$`)
+	rePalette := regexp.MustCompile(`^[0-2]$`)
 	reFilename := regexp.MustCompile(`^[\w\.]+$`)
 	// Set default options
 	df := map[string]Option{
-		"radius": {val: 1, re: reFloatP},
-		"real":   {val: 0, re: reFloat},
-		"imag":   {val: 0, re: reFloat},
-		"creal":  {val: 0, re: reFloat},
-		"cimag":  {val: 0, re: reFloat},
-		"width":  {val: 1920, re: reIntP},
-		"height": {val: 1080, re: reIntP},
-		"iters":  {val: 200, re: reIntP},
-		"zoom":   {val: 0, re: reFloatP},
-		"scale":  {val: 0.5, re: reFloatP},
+		"radius":  {val: 1, re: reFloatP},
+		"real":    {val: 0, re: reFloat},
+		"imag":    {val: 0, re: reFloat},
+		"creal":   {val: 0, re: reFloat},
+		"cimag":   {val: 0, re: reFloat},
+		"width":   {val: 1920, re: reIntP},
+		"height":  {val: 1080, re: reIntP},
+		"iters":   {val: 200, re: reIntP},
+		"zoom":    {val: 0, re: reFloatP},
+		"scale":   {val: 0.5, re: reFloatP},
+		"palette": {val: 0, re: rePalette},
 	}
 	makeGif := false
 	filename := ""
@@ -99,6 +101,7 @@ type: m (mandelbrot) or j (julia set)
 options:
   -width=<width>  		set width of image to <width>, defult is 1920
   -height=<height>		set height of image to <height>, default is 1080
+  -palette=<pal>		set the color palette. <pal> is an int in [0,2]
   -real=<real>			set real part of center to <real>
   -imag=<imag>			set imaginary part of center to <imag>
   -radius=<radius>		set radius to include in image to <radius>
@@ -129,6 +132,7 @@ options:
 	maxIters := uint(options["iters"])
 	zoom := options["zoom"]
 	scale := options["scale"]
+	paletteNum := int(options["palette"])
 
 	// Define image traits
 	var img *image.RGBA
@@ -137,9 +141,9 @@ options:
 		var images []*image.Paletted
 		var delays []int
 		if fractalType == "m" {
-			images = mandelbrotGIF(width, height, tl, br, maxIters, img, zoom, scale)
+			images = mandelbrotGIF(width, height, tl, br, maxIters, img, zoom, scale, paletteNum)
 		} else {
-			images = juliaGIF(width, height, tl, br, maxIters, c, img, zoom, scale)
+			images = juliaGIF(width, height, tl, br, maxIters, c, img, zoom, scale, paletteNum)
 		}
 		for i := 0; i < len(images); i++ {
 			delays = append(delays, 50)
@@ -156,9 +160,9 @@ options:
 	} else {
 		img := image.NewRGBA(image.Rect(0, 0, width, height))
 		if fractalType == "m" {
-			mandelbrotImage(width, height, tl, br, maxIters, img)
+			mandelbrotImage(width, height, tl, br, maxIters, img, paletteNum)
 		} else {
-			juliaImage(width, height, tl, br, maxIters, c, img)
+			juliaImage(width, height, tl, br, maxIters, c, img, paletteNum)
 		}
 		f, err := os.Create(filename)
 		if err == nil {
