@@ -61,22 +61,12 @@ func mapCmplx(x int, y int, width, height int, tl complex128, br complex128) com
 		float64(y)/float64(height-1)*imag(br-tl)+imag(tl))
 }
 
-// Create an image of the mandelbrot set with the specified parameters
-func mandelbrotImage(width, height int, tl, br complex128, maxIters uint) *image.RGBA {
-	img := image.NewRGBA(image.Rect(0, 0, width, height))
-	for x := 0; x < width; x++ {
-		for y := 0; y < height; y++ {
-			var v complex128 = mapCmplx(x, y, width, height, tl, br)
-			iters := mandelbrotIters(v, maxIters)
-			img.Set(x, y, fractalColor(iters, maxIters))
-		}
-	}
-	return img
+type ImageType interface {
+	Set(int, int, color.Color)
 }
 
-// Create a paletted image of the mandelbrot set with the specified parameters
-func mandelbrotGifImage(width, height int, tl, br complex128, maxIters uint, palette *[]color.Color) *image.Paletted {
-	img := image.NewPaletted(image.Rect(0, 0, width, height), *palette)
+// Create an image of the mandelbrot set with the specified parameters
+func mandelbrotImage(width, height int, tl, br complex128, maxIters uint, img ImageType) {
 	for x := 0; x < width; x++ {
 		for y := 0; y < height; y++ {
 			var v complex128 = mapCmplx(x, y, width, height, tl, br)
@@ -84,7 +74,6 @@ func mandelbrotGifImage(width, height int, tl, br complex128, maxIters uint, pal
 			img.Set(x, y, fractalColor(iters, maxIters))
 		}
 	}
-	return img
 }
 
 // Create an gif of the mandelbrot set with the specified parameters. zooming in
@@ -101,7 +90,9 @@ func mandelbrotGIF(width, height int, tl, br complex128, maxIters uint, img *ima
 	mult := complex(math.Exp(-scale), 0)
 	zoomIters := int(math.Ceil(math.Log(10) * zoom / scale))
 	for i := 0; i <= zoomIters; i++ {
-		images = append(images, mandelbrotGifImage(width, height, tl, br, maxIters, palette))
+		img := image.NewPaletted(image.Rect(0, 0, width, height), *palette)
+		mandelbrotImage(width, height, tl, br, maxIters, img)
+		images = append(images, img)
 		tl = center + mult*(tl-center)
 		br = center + mult*(br-center)
 	}
@@ -109,8 +100,7 @@ func mandelbrotGIF(width, height int, tl, br complex128, maxIters uint, img *ima
 }
 
 // Create an image of the julia set with the specified parameters
-func juliaImage(width, height int, tl, br complex128, maxIters uint, c complex128) *image.RGBA {
-	img := image.NewRGBA(image.Rectangle{image.Point{0, 0}, image.Point{width, height}})
+func juliaImage(width, height int, tl, br complex128, maxIters uint, c complex128, img ImageType) {
 	for x := 0; x < width; x++ {
 		for y := 0; y < height; y++ {
 			var z complex128 = mapCmplx(x, y, width, height, tl, br)
@@ -118,19 +108,6 @@ func juliaImage(width, height int, tl, br complex128, maxIters uint, c complex12
 			img.Set(x, y, fractalColor(iters, maxIters))
 		}
 	}
-	return img
-}
-
-func juliaGifImage(width, height int, tl, br complex128, maxIters uint, c complex128, palette *[]color.Color) *image.Paletted {
-	img := image.NewPaletted(image.Rect(0, 0, width, height), *palette)
-	for x := 0; x < width; x++ {
-		for y := 0; y < height; y++ {
-			var z complex128 = mapCmplx(x, y, width, height, tl, br)
-			iters := juliaIters(z, c, maxIters)
-			img.Set(x, y, fractalColor(iters, maxIters))
-		}
-	}
-	return img
 }
 
 // Create an gif of the julia set with the specified parameters. zooming in
@@ -147,7 +124,9 @@ func juliaGIF(width, height int, tl, br complex128, maxIters uint, c complex128,
 	mult := complex(math.Exp(-scale), 0)
 	zoomIters := int(math.Ceil(math.Log(10) * zoom / scale))
 	for i := 0; i <= zoomIters; i++ {
-		images = append(images, juliaGifImage(width, height, tl, br, maxIters, c, palette))
+		img := image.NewPaletted(image.Rect(0, 0, width, height), *palette)
+		juliaImage(width, height, tl, br, maxIters, c, img)
+		images = append(images, img)
 		tl = center + mult*(tl-center)
 		br = center + mult*(br-center)
 	}

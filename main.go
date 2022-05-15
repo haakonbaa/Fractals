@@ -143,11 +143,11 @@ options:
 		// TODO: SAVE images
 
 	} else {
-		var img *image.RGBA
+		img := image.NewRGBA(image.Rect(0, 0, width, height))
 		if fractalType == "m" {
-			img = mandelbrotImage(width, height, tl, br, maxIters)
+			mandelbrotImage(width, height, tl, br, maxIters, img)
 		} else {
-			img = juliaImage(width, height, tl, br, maxIters, c)
+			juliaImage(width, height, tl, br, maxIters, c, img)
 		}
 		f, err := os.Create("image.png")
 		if err == nil {
