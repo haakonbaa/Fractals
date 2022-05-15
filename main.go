@@ -18,12 +18,13 @@ type Option struct {
 
 // Gets the options passed by user and parses them. Exits with status code 1
 // on wrongly formated input
-func parseOptions(options []string) (map[string]float64, bool) {
+func parseOptions(options []string) (map[string]float64, bool, string) {
 	// Define patterns for different types of options
 	reFloat := regexp.MustCompile(`^-?[0-9]*(?:\.[0-9]+)?$`) // -inf < x < inf
 	reFloatP := regexp.MustCompile(`^[0-9]*(?:\.[0-9]*)?$`)  // 0 < x
 	reIntP := regexp.MustCompile(`^[1-9]+[0-9]*$`)           // 1 <= x in Z
 	reOption := regexp.MustCompile(`^-([a-zA-Z]+)=([^ ]+)$`)
+	reFilename := regexp.MustCompile(`^[\w\.]+$`)
 	// Set default options
 	df := map[string]Option{
 		"radius": {val: 1, re: reFloatP},
@@ -38,14 +39,19 @@ func parseOptions(options []string) (map[string]float64, bool) {
 		"scale":  {val: 0.5, re: reFloatP},
 	}
 	makeGif := false
+	filename := ""
 	parsedOptions := make(map[string]float64)
 	for name, opt := range df {
 		parsedOptions[name] = opt.val
 	}
 	// Parse all program arguments
-	for _, option := range options {
+	for i, option := range options {
 		if option == "gif" {
 			makeGif = true
+			continue
+		}
+		if reFilename.Match([]byte(option)) && i == len(options)-1 {
+			filename = option
 			continue
 		}
 		matches := reOption.FindStringSubmatch(option)
@@ -71,7 +77,14 @@ func parseOptions(options []string) (map[string]float64, bool) {
 		}
 		parsedOptions[name] = fval
 	}
-	return parsedOptions, makeGif
+	if filename == "" {
+		if makeGif {
+			filename = "fractal.gif"
+		} else {
+			filename = "fractal.png"
+		}
+	}
+	return parsedOptions, makeGif, filename
 }
 
 func main() {
@@ -107,7 +120,7 @@ options:
 		os.Exit(1)
 	}
 	//width, height, center, c, radius, maxIters, makeGif, zoom := parseOptions(args[1:])
-	options, makeGif := parseOptions(args[1:])
+	options, makeGif, filename := parseOptions(args[1:])
 	width := int(options["width"])
 	height := int(options["height"])
 	center := complex(options["real"], options["imag"])
@@ -131,7 +144,7 @@ options:
 		for i := 0; i < len(images); i++ {
 			delays = append(delays, 50)
 		}
-		f, _ := os.OpenFile("image.gif", os.O_WRONLY|os.O_CREATE, 0600)
+		f, _ := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE, 0600)
 		defer f.Close()
 		err := gif.EncodeAll(f, &gif.GIF{
 			Image: images,
@@ -140,8 +153,6 @@ options:
 		if err != nil {
 			fmt.Println(err)
 		}
-		// TODO: SAVE images
-
 	} else {
 		img := image.NewRGBA(image.Rect(0, 0, width, height))
 		if fractalType == "m" {
@@ -149,7 +160,7 @@ options:
 		} else {
 			juliaImage(width, height, tl, br, maxIters, c, img)
 		}
-		f, err := os.Create("image.png")
+		f, err := os.Create(filename)
 		if err == nil {
 			png.Encode(f, img)
 			os.Exit(0)
