@@ -33,4 +33,6 @@ To get detailed info about the usage, simply run the program without any argumen
 ```bash
 ./fractals m gif -real=-1.7844714 -width=608 -height=342 -scale=0.4 -iters=3000 -zoom=0.5
 ```
-![mandelbrotgif](./images/mandelbrot.gif)
+<p align="center">
+    <img src="./images/mandelbrot.gif">
+</p>
