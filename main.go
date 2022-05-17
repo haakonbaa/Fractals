@@ -16,8 +16,7 @@ type Option struct {
 	re  *regexp.Regexp
 }
 
-// Gets the options passed by user and parses them. Exits with status code 1
-// on wrongly formated input
+// Gets the options passed by user and parses them.
 func parseOptions(options []string) (map[string]float64, bool, string) {
 	// Define patterns for different types of options
 	reFloat := regexp.MustCompile(`^-?[0-9]*(?:\.[0-9]+)?$`) // -inf < x < inf
@@ -52,6 +51,7 @@ func parseOptions(options []string) (map[string]float64, bool, string) {
 			makeGif = true
 			continue
 		}
+		// parse last argument as filename
 		if reFilename.Match([]byte(option)) && i == len(options)-1 {
 			filename = option
 			continue
@@ -122,7 +122,6 @@ options:
 		fmt.Println(helpString)
 		os.Exit(1)
 	}
-	//width, height, center, c, radius, maxIters, makeGif, zoom := parseOptions(args[1:])
 	options, makeGif, filename := parseOptions(args[1:])
 	width := int(options["width"])
 	height := int(options["height"])
@@ -171,6 +170,5 @@ options:
 		}
 		fmt.Println(err)
 		os.Exit(1)
-
 	}
 }

@@ -28,8 +28,9 @@ func juliaIters(z, c complex128, maxIters uint) uint {
 	return i
 }
 
-// After adding a palette the help text and regular expression that
-// parses the arguments must be updated
+// Pallets used to color the fractals.
+// After adding a palette; update the help-text and
+// update the argument parser
 var PALETTE [][][]float64 = [][][]float64{
 	{
 		{0x10, 0x10, 0x40, 0xff},
@@ -51,13 +52,12 @@ var PALETTE [][][]float64 = [][][]float64{
 	},
 }
 
-// Gets the color to color a pixel based on the iterations
+// Determine pixel color from number of iterations
 func fractalColor(iters, maxIters uint, paletteNum int) color.RGBA {
 	if iters == maxIters {
 		return color.RGBA{0, 0, 0, 0xff}
 	}
 	palette := PALETTE[paletteNum]
-
 	var plen uint = uint(len(palette))
 	var gradients uint = 256 / plen
 	index1 := uint(iters / gradients % plen)
